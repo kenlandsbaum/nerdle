@@ -21,3 +21,8 @@ func respondBadRequestErr(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusBadRequest)
 	w.Write([]byte(err.Error()))
 }
+
+func respondUnauthorizedErr(w http.ResponseWriter, err error) {
+	w.WriteHeader(http.StatusUnauthorized)
+	w.Write([]byte(err.Error()))
+}

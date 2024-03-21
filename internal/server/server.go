@@ -24,7 +24,8 @@ func (s *Server) applyMiddleware() {
 	s.Router.Use(middleware.RealIP)
 	s.Router.Use(middleware.Logger)
 	s.Router.Use(middleware.Recoverer)
-	s.Router.Use(middleware.Timeout(2 * time.Second))
+	s.Router.Use(authenticate)
+	s.Router.Use(middleware.Timeout(3 * time.Second))
 }
 
 func (s *Server) routes() {
@@ -36,11 +37,19 @@ func (s Server) Run() error {
 	s.applyMiddleware()
 	s.routes()
 
-	srv := &http.Server{Addr: host, Handler: s.Router}
-
 	log.Info().Msg(fmt.Sprintf("starting server on %s", host))
-	if err := srv.ListenAndServe(); err != nil {
+
+	if err := http.ListenAndServe(host, s.Router); err != nil {
 		return err
 	}
 	return nil
 }
+
+// using *http.Server struct
+// srv := &http.Server{Addr: host, Handler: s.Router}
+
+// log.Info().Msg(fmt.Sprintf("starting server on %s", host))
+// if err := srv.ListenAndServe(); err != nil {
+// 	return err
+// }
+// return nil
