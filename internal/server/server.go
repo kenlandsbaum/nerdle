@@ -12,11 +12,19 @@ import (
 )
 
 type Server struct {
-	Router chi.Router //http.Handler
+	Router chi.Router
+	*http.Server
 }
 
 func New(router chi.Router) *Server {
-	return &Server{Router: router}
+	srv := http.Server{
+		Addr:         os.Getenv("API_HOST"),
+		Handler:      router,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  15 * time.Second,
+	}
+	return &Server{router, &srv}
 }
 
 func (s *Server) applyMiddleware() {
@@ -32,24 +40,15 @@ func (s *Server) routes() {
 	s.Router.Get("/", s.handleHome)
 }
 
-func (s Server) Run() error {
-	host := os.Getenv("API_HOST")
+func (s *Server) Run() error {
 	s.applyMiddleware()
 	s.routes()
 
-	log.Info().Msg(fmt.Sprintf("starting server on %s", host))
+	log.Info().Msg(fmt.Sprintf("starting server on %s", s.Addr))
 
-	if err := http.ListenAndServe(host, s.Router); err != nil {
+	if err := s.ListenAndServe(); err != nil {
 		return err
 	}
+
 	return nil
 }
-
-// using *http.Server struct
-// srv := &http.Server{Addr: host, Handler: s.Router}
-
-// log.Info().Msg(fmt.Sprintf("starting server on %s", host))
-// if err := srv.ListenAndServe(); err != nil {
-// 	return err
-// }
-// return nil
