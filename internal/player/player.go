@@ -8,6 +8,7 @@ import (
 
 type Player struct {
 	Attempts []guess.Guess
+	Id       string
 	Name     string
 	Reader   io.Reader
 	Writer   io.Writer
