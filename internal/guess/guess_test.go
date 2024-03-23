@@ -9,7 +9,7 @@ func Test_String(t *testing.T) {
 	result := testGuess.String()
 
 	if result != "test" {
-		t.Fatalf("expected %s but got %s", "test", result)
+		t.Errorf("expected %s but got %s", "test", result)
 	}
 }
 
@@ -47,12 +47,12 @@ func Test_Check(t *testing.T) {
 		testGuess := New("tst")
 		actual, _ := testGuess.Check(ts.in)
 		if actual != ts.expected {
-			t.Fatalf("expected %v but got %v\n", ts.expected, actual)
+			t.Errorf("expected %v but got %v\n", ts.expected, actual)
 		}
 		if !actual {
 			for k, enumVal := range ts.statuses {
 				if testGuess[k].Status != enumVal {
-					t.Fatalf(
+					t.Errorf(
 						"test failed on guess character status assertion. wanted %d but got %d\n",
 						enumVal,
 						testGuess[k].Status,
@@ -64,7 +64,7 @@ func Test_Check(t *testing.T) {
 	testGuess := New("tst")
 	_, err := testGuess.Check("lololol")
 	if err == nil {
-		t.Fatal("expected error to not be nil")
+		t.Errorf("expected error to not be nil")
 	}
 }
 
@@ -80,6 +80,6 @@ func Test_GetColoredString(t *testing.T) {
 
 	actual := testGuess.GetColoredString()
 	if actual != expected {
-		t.Fatalf("expected %s but got %s", expected, actual)
+		t.Errorf("expected %s but got %s", expected, actual)
 	}
 }

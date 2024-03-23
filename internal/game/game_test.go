@@ -15,13 +15,13 @@ func Test_getGuess(t *testing.T) {
 	actual, _ := testGame.getGuess()
 
 	if actual.String() != input {
-		t.Fatalf("expected %s but got %s", input, actual)
+		t.Errorf("expected %s but got %s", input, actual)
 	}
 
 	testGame = Game{reader: strings.NewReader("\n")}
 	_, err := testGame.getGuess()
 	if err == nil {
-		t.Fatal("expected an error but err was nil")
+		t.Error("expected an error but err was nil")
 	}
 }
 
@@ -33,7 +33,7 @@ func Test_handleAttempts(t *testing.T) {
 	testGame := Game{maxAttempts: 3, solution: "slice", reader: testReader, gamePlayer: &testPlayer}
 	actual, _ := testGame.handleAttempts()
 	if !actual {
-		t.Fatalf("expected true for %s", testSuccessInput)
+		t.Errorf("expected true for %s", testSuccessInput)
 	}
 
 	testPlayer = player.Player{Name: "tst", Attempts: make([]guess.Guess, 0), Writer: &testWriter}
@@ -42,7 +42,7 @@ func Test_handleAttempts(t *testing.T) {
 	testGame = Game{maxAttempts: 3, solution: "slice", reader: testReader, gamePlayer: &testPlayer}
 	actual, _ = testGame.handleAttempts()
 	if actual {
-		t.Fatalf("expected false for %s", testFailureInput)
+		t.Errorf("expected false for %s", testFailureInput)
 	}
 }
 
@@ -52,11 +52,11 @@ func Test_setExitMessage(t *testing.T) {
 
 	testGame.setExitMessage(true)
 	if !strings.Contains(testGame.exitMessage, "winner") {
-		t.Fatalf("unexpected string %s", testGame.exitMessage)
+		t.Errorf("unexpected string %s", testGame.exitMessage)
 	}
 
 	testGame.setExitMessage(false)
 	if !strings.Contains(testGame.exitMessage, "lost") {
-		t.Fatalf("unexpected string %s", testGame.exitMessage)
+		t.Errorf("unexpected string %s", testGame.exitMessage)
 	}
 }

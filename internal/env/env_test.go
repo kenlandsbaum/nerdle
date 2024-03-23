@@ -10,6 +10,6 @@ func Test_Load(t *testing.T) {
 	expectedDictionaryApi := "https://api.dictionaryapi.dev/api/v2/entries/en/"
 	dictionaryApi := os.Getenv("DICTIONARY_API")
 	if dictionaryApi != expectedDictionaryApi {
-		t.Fatalf("expected %s but got %s", expectedDictionaryApi, dictionaryApi)
+		t.Errorf("expected %s but got %s", expectedDictionaryApi, dictionaryApi)
 	}
 }

@@ -12,6 +12,11 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+var (
+	testGoodResponseBody = []byte(
+		`[{"word":"test","meanings":[{"definitions":[{"definition":"what you do!"}]}]}]`)
+)
+
 type MockRest struct {
 	mock.Mock
 }
@@ -37,16 +42,14 @@ func Test_Lookup(t *testing.T) {
 	testDict := Dictionary{}
 	actualV, actualE := testDict.Lookup("")
 	if actualV != nil {
-		t.Fatal("expected nil")
+		t.Error("expected nil")
 	}
 	if actualE != nil {
-		t.Fatal("expected nil")
+		t.Error("expected nil")
 	}
 }
 
 func Test_GetDefinition(t *testing.T) {
-	testGoodResponseBody := []byte(
-		`[{"word":"test","meanings":[{"definitions":[{"definition":"what you do!"}]}]}]`)
 	testRc := new(MockRest)
 	testFs := new(MockFS)
 	testRc.On("Do").Return(&rest.RestResponse{Body: testGoodResponseBody}, nil)
@@ -61,10 +64,10 @@ func Test_GetDefinition(t *testing.T) {
 
 	actualDef, err := testDict.getDefinition(&DictionaryWord{Word: "test"})
 	if err != nil {
-		t.Fatal("expected nil error\n", err)
+		t.Errorf("got %s but expected nil error\n", err.Error())
 	}
 	if actualDef.Word != expected.Word {
-		t.Fatalf("expected %s but got %s\n", "test", actualDef.Word)
+		t.Errorf("expected %s but got %s\n", "test", actualDef.Word)
 	}
 
 	for i, meaning := range actualDef.Meanings {
@@ -81,18 +84,18 @@ func Test_scanSource(t *testing.T) {
 	testDict := Dictionary{FsClient: testFs, RestClient: testRc}
 	actualWord, err := testDict.scanSource(testReader, 2)
 	if err != nil {
-		t.Fatalf("expected nil error but got %s\n", err)
+		t.Errorf("expected nil error but got %s\n", err)
 	}
 	if actualWord.Word != "two" {
-		t.Fatalf("expected %s but got %s\n", "two", actualWord.Word)
+		t.Errorf("expected %s but got %s\n", "two", actualWord.Word)
 	}
 
 	_, actualErr := testDict.scanSource(testReader, 4)
 	if actualErr == nil {
-		t.Fatal("expected error to be non-nil")
+		t.Error("expected error to be non-nil")
 	}
 	if actualErr.Error() != "word not found" {
-		t.Fatalf("expected %s but got %s\n", "word not found", actualErr.Error())
+		t.Errorf("expected %s but got %s\n", "word not found", actualErr.Error())
 	}
 }
 
@@ -128,19 +131,33 @@ func Test_getWord(t *testing.T) {
 	actual, _ := testDict.getWord(randomInt)
 
 	if actual.Word != "one" {
-		t.Fatalf("expected 'one' but got %s", actual.Word)
+		t.Errorf("expected 'one' but got %s", actual.Word)
 	}
 
 	_, actualErr := testDict.getWord(4)
 	if actualErr == nil {
-		t.Fatalf("expected non nil error")
+		t.Errorf("expected non nil error")
 	}
 
 	testBadDict := Dictionary{FsClient: testFs, RestClient: testRc, DictionarySource: "bad"}
 
 	_, fsClientErr := testBadDict.getWord(1)
 	if fsClientErr == nil {
-		t.Fatalf("expected non nil error")
+		t.Errorf("expected non nil error")
+	}
+}
+
+func TestOrchestrate(t *testing.T) {
+	randomInt := 1
+	var testWriter bytes.Buffer
+	testRc := new(MockRest)
+	testFs := new(testReader)
+	testRc.On("Do").Return(&rest.RestResponse{Body: testGoodResponseBody}, nil)
+	testDict := Dictionary{FsClient: testFs, RestClient: testRc, DictionarySource: "good", Writer: &testWriter}
+
+	solution := testDict.Orchestrate(randomInt)
+	if solution != "test" {
+		t.Errorf("got '%s' but expected 'test'", solution)
 	}
 }
 
@@ -176,7 +193,7 @@ func Test_showHints(t *testing.T) {
 	lines := strings.Split(values, "\n")
 	for i, line := range lines {
 		if line != expectedOutput[i] {
-			t.Fatalf("expected %s but got %s", expectedOutput[i], line)
+			t.Errorf("expected %s but got %s", expectedOutput[i], line)
 		}
 	}
 }
@@ -185,12 +202,12 @@ func Test_parseToDefintionResponse(t *testing.T) {
 	testBytes := []byte("[]")
 	_, err := parseToDefintionResponse(testBytes)
 	if err == nil {
-		t.Fatal("expected non nil error")
+		t.Error("expected non nil error")
 	}
 
 	testBytes = []byte("<>")
 	_, parsingErr := parseToDefintionResponse(testBytes)
 	if parsingErr == nil {
-		t.Fatal("expected non nil error")
+		t.Error("expected non nil error")
 	}
 }

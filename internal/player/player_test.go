@@ -70,7 +70,7 @@ func Test_Print(t *testing.T) {
 	}
 	for i, line := range strings.Split(actual, "\n") {
 		if line != expected[i] {
-			t.Fatalf("expected %s but got %s", expected[i], actual)
+			t.Errorf("expected %s but got %s", expected[i], actual)
 		}
 	}
 }

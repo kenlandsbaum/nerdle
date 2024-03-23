@@ -19,31 +19,31 @@ func (m *mockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) 
 	return m.resp, m.err
 }
 
-func TestRestClient_Do(t *testing.T) {
+func TestRestClientDo(t *testing.T) {
 	t.Run("error creating bad request", func(t *testing.T) {
 		brokenUrl := "::::"
 		rc := &RestClient{client: http.DefaultClient}
 		rc.Get(brokenUrl)
 		if rc.err == nil {
-			t.Fatal("expected error but got nil")
+			t.Error("expected error but got nil")
 		}
 		rc.err = nil
 
 		rc.Put(brokenUrl, nil)
 		if rc.err == nil {
-			t.Fatal("expected error but got nil")
+			t.Error("expected error but got nil")
 		}
 		rc.err = nil
 
 		rc.Post(brokenUrl, nil)
 		if rc.err == nil {
-			t.Fatal("expected error but got nil")
+			t.Error("expected error but got nil")
 		}
 		rc.err = nil
 
 		rc.Delete(brokenUrl, nil)
 		if rc.err == nil {
-			t.Fatal("expected error but got nil")
+			t.Error("expected error but got nil")
 		}
 	})
 
@@ -134,11 +134,11 @@ func TestRestClient_Do(t *testing.T) {
 		res, err := rc.Post("https://test.com", bytes.NewReader(postBody)).Do()
 
 		if err != nil {
-			t.Fatalf("expected nil error")
+			t.Errorf("expected nil error")
 		}
 
 		if res.StatusCode != http.StatusCreated {
-			t.Fatalf("expected %d but got %d", http.StatusCreated, res.StatusCode)
+			t.Errorf("expected %d but got %d", http.StatusCreated, res.StatusCode)
 		}
 	})
 
@@ -159,11 +159,11 @@ func TestRestClient_Do(t *testing.T) {
 		res, err := rc.Put("https://test.com", bytes.NewReader(putBody)).Do()
 
 		if err != nil {
-			t.Fatalf("expected nil error")
+			t.Errorf("expected nil error")
 		}
 
 		if res.StatusCode != http.StatusCreated {
-			t.Fatalf("expected %d but got %d", http.StatusCreated, res.StatusCode)
+			t.Errorf("expected %d but got %d", http.StatusCreated, res.StatusCode)
 		}
 	})
 

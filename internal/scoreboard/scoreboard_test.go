@@ -59,7 +59,7 @@ func Test_PrintScore(t *testing.T) {
 			}
 		}
 		if !found {
-			t.Fatal("expected line to be found")
+			t.Errorf("expected line to be found")
 		}
 	}
 }
