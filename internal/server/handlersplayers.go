@@ -28,10 +28,17 @@ func (s *Server) handlePostPlayer(w http.ResponseWriter, r *http.Request) {
 		respondBadRequestErr(w, errors.New("player missing required property 'name'"))
 		return
 	}
-	newPlayer := player.ApiPlayer{Name: newPlayerRequest.Name, Id: id.GetUlid()}
-	s.players[newPlayer.Id] = &newPlayer
-	log.Info().Msgf("new player created: %v\n", newPlayer)
+	newPlayer := s.addPlayer(newPlayerRequest)
+	log.Info().Msgf("new player created: %v\n", newPlayer.Name)
 	respondCreated(w, []byte(fmt.Sprintf("created player %s", newPlayer.Id.String())))
+}
+
+func (s *Server) addPlayer(newPlayerRequest *NewPlayerRequest) player.ApiPlayer {
+	newPlayer := player.ApiPlayer{Name: newPlayerRequest.Name, Id: id.GetUlid()}
+	s.mutex.Lock()
+	s.players[newPlayer.Id] = &newPlayer
+	s.mutex.Unlock()
+	return newPlayer
 }
 
 func (s *Server) handleGetPlayers(w http.ResponseWriter, _ *http.Request) {

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/oklog/ulid/v2"
@@ -19,7 +20,7 @@ func Test_handlePostPlayerSuccess(t *testing.T) {
 	w := httptest.NewRecorder()
 	r, _ := http.NewRequest(http.MethodPost, "/", bytes.NewReader(testRequestBody))
 
-	s := Server{players: make(map[ulid.ULID]*player.ApiPlayer, 0)}
+	s := Server{players: make(map[ulid.ULID]*player.ApiPlayer, 0), mutex: &sync.RWMutex{}}
 	s.handlePostPlayer(w, r)
 	result := w.Result()
 

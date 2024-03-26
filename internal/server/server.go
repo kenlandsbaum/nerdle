@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -17,8 +18,9 @@ import (
 type Server struct {
 	Router chi.Router
 	*http.Server
+	mutex   *sync.RWMutex
 	players map[ulid.ULID]*player.ApiPlayer
-	games   map[ulid.ULID]*game.Game
+	games   map[ulid.ULID]*game.ApiGame
 }
 
 func New(router chi.Router) *Server {
@@ -29,10 +31,11 @@ func New(router chi.Router) *Server {
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,
 	}
+	mutex := sync.RWMutex{}
 	players := make(map[ulid.ULID]*player.ApiPlayer, 0)
-	games := make(map[ulid.ULID]*game.Game, 0)
+	games := make(map[ulid.ULID]*game.ApiGame, 0)
 
-	return &Server{router, &srv, players, games}
+	return &Server{router, &srv, &mutex, players, games}
 }
 
 func (s *Server) applyMiddleware() {
@@ -48,6 +51,7 @@ func (s *Server) routes() {
 	s.Router.Get("/", useJsonContent(s.handleHome))
 	s.Router.Get("/player", useJsonContent(s.handleGetPlayers))
 	s.Router.Post("/player", useJsonContent(s.handlePostPlayer))
+	s.Router.Post("/game", useJsonContent(s.handlePostGame))
 }
 
 func (s *Server) Run() error {
