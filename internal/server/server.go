@@ -1,11 +1,13 @@
 package server
 
 import (
+	"essentials/nerdle/internal/fileserver"
 	"essentials/nerdle/internal/game"
 	"essentials/nerdle/internal/player"
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -54,9 +56,16 @@ func (s *Server) routes() {
 	s.Router.Post("/game", useJsonContent(s.handlePostGame))
 }
 
+func (s *Server) ui() {
+	workDir, _ := os.Getwd()
+	filesDir := http.Dir(filepath.Join(workDir, "ui"))
+	fileserver.FileServer(s.Router, "/ui", filesDir)
+}
+
 func (s *Server) Run() error {
 	s.applyMiddleware()
 	s.routes()
+	s.ui()
 
 	log.Info().Msg(fmt.Sprintf("starting server on %s", s.Addr))
 
