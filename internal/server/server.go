@@ -42,13 +42,12 @@ func (s *Server) applyMiddleware() {
 	s.Router.Use(middleware.Recoverer)
 	s.Router.Use(authenticate)
 	s.Router.Use(middleware.Timeout(3 * time.Second))
-	s.Router.Use(jsonContent)
 }
 
 func (s *Server) routes() {
-	s.Router.Get("/", s.handleHome)
-	s.Router.Get("/player", s.handleGetPlayers)
-	s.Router.Post("/player", s.handlePostPlayer)
+	s.Router.Get("/", useJsonContent(s.handleHome))
+	s.Router.Get("/player", useJsonContent(s.handleGetPlayers))
+	s.Router.Post("/player", useJsonContent(s.handlePostPlayer))
 }
 
 func (s *Server) Run() error {
