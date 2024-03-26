@@ -1,6 +1,8 @@
 package server
 
 import (
+	"essentials/nerdle/internal/game"
+	"essentials/nerdle/internal/player"
 	"fmt"
 	"net/http"
 	"os"
@@ -8,12 +10,15 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/oklog/ulid/v2"
 	"github.com/rs/zerolog/log"
 )
 
 type Server struct {
 	Router chi.Router
 	*http.Server
+	players map[ulid.ULID]*player.ApiPlayer
+	games   map[ulid.ULID]*game.Game
 }
 
 func New(router chi.Router) *Server {
@@ -24,7 +29,10 @@ func New(router chi.Router) *Server {
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,
 	}
-	return &Server{router, &srv}
+	players := make(map[ulid.ULID]*player.ApiPlayer, 0)
+	games := make(map[ulid.ULID]*game.Game, 0)
+
+	return &Server{router, &srv, players, games}
 }
 
 func (s *Server) applyMiddleware() {
@@ -34,10 +42,12 @@ func (s *Server) applyMiddleware() {
 	s.Router.Use(middleware.Recoverer)
 	s.Router.Use(authenticate)
 	s.Router.Use(middleware.Timeout(3 * time.Second))
+	s.Router.Use(jsonContent)
 }
 
 func (s *Server) routes() {
 	s.Router.Get("/", s.handleHome)
+	s.Router.Get("/player", s.handleGetPlayers)
 	s.Router.Post("/player", s.handlePostPlayer)
 }
 
