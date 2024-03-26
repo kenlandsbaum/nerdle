@@ -38,6 +38,7 @@ func (s *Server) applyMiddleware() {
 
 func (s *Server) routes() {
 	s.Router.Get("/", s.handleHome)
+	s.Router.Post("/player", s.handlePostPlayer)
 }
 
 func (s *Server) Run() error {

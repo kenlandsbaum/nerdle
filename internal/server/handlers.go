@@ -1,7 +1,13 @@
 package server
 
 import (
+	"essentials/nerdle/internal/player"
+	"essentials/nerdle/internal/service/id"
+	"fmt"
+	"io"
 	"net/http"
+
+	"github.com/rs/zerolog/log"
 )
 
 func (s Server) handleHome(w http.ResponseWriter, r *http.Request) {
@@ -9,15 +15,21 @@ func (s Server) handleHome(w http.ResponseWriter, r *http.Request) {
 	respondOk(w, []byte(`{"message":"welcome to the app"}`))
 }
 
-// func (s Server) handleSlow(w http.ResponseWriter, r *http.Request) {
-// 	ctx := r.Context()
-// 	processTime := time.Duration(3) * time.Second
-
-// 	select {
-// 	case <-ctx.Done():
-// 		return
-
-// 	case <-time.After(processTime):
-// 	}
-// 	respondOk(w, []byte("done"))
-// }
+func (s Server) handlePostPlayer(w http.ResponseWriter, r *http.Request) {
+	body := r.Body
+	defer body.Close()
+	bodyBytes, err := io.ReadAll(body)
+	if err != nil {
+		respondBadRequestErr(w, err)
+		return
+	}
+	newPlayerRequest, err := unmarshalToType[NewPlayerRequest](bodyBytes)
+	if err != nil {
+		respondBadRequestErr(w, err)
+		return
+	}
+	newPlayer := player.ApiPlayer{Name: newPlayerRequest.Name, Id: id.GetUlid()}
+	// do something with player
+	log.Info().Msgf("new player created: %v\n", newPlayer)
+	respondCreated(w, []byte(fmt.Sprintf("created player %s", newPlayer.Id.String())))
+}
