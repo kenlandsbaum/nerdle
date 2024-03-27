@@ -32,7 +32,7 @@ func (s *Server) handlePostGame(w http.ResponseWriter, r *http.Request) {
 	}
 	gameId := id.GetUlid()
 	s.games[gameId] = game.NewApiGame(p, gameId)
-	respondOk(w, []byte(fmt.Sprintf("game created with id %v", gameId)))
+	respondCreated(w, []byte(fmt.Sprintf("game created with id %v", gameId)))
 }
 
 func (s *Server) getPlayer(id ulid.ULID) (*player.ApiPlayer, error) {
