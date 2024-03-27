@@ -2,11 +2,14 @@ package server
 
 import (
 	"errors"
+	"essentials/nerdle/internal/errs"
 	"essentials/nerdle/internal/game"
 	"essentials/nerdle/internal/player"
 	"essentials/nerdle/internal/service/id"
 	"io"
 	"net/http"
+	"os"
+	"strconv"
 
 	"github.com/oklog/ulid/v2"
 )
@@ -62,6 +65,8 @@ func (s *Server) handleStartGame(w http.ResponseWriter, r *http.Request) error {
 	if game.GamePlayer.Id != startGameRequest.PlayerID {
 		return errors.New("this player is not playing this game")
 	}
+	definitionResponse := s.dictionary.GetWordApi(s.getRandomInt())
+	respondOk(w, mustMarshal(definitionResponse))
 	return nil
 }
 
@@ -71,4 +76,10 @@ func handleError(fn HandlerFuncErr) http.HandlerFunc {
 			respondBadRequestErr(w, err)
 		}
 	}
+}
+
+func (s *Server) getRandomInt() int {
+	dictionarySize, err := strconv.Atoi(os.Getenv("DICTIONARY_SIZE"))
+	errs.PanicIfErr(err)
+	return s.intFunc(dictionarySize)
 }

@@ -6,6 +6,7 @@ import (
 	"essentials/nerdle/internal/game"
 	"essentials/nerdle/internal/player"
 	"fmt"
+	"math/rand/v2"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -25,6 +26,7 @@ type Server struct {
 	players    map[ulid.ULID]*player.ApiPlayer
 	games      map[ulid.ULID]*game.ApiGame
 	dictionary dictionary.DictionaryIface
+	intFunc    func(int) int
 }
 
 func New(router chi.Router, dict dictionary.DictionaryIface) *Server {
@@ -38,8 +40,9 @@ func New(router chi.Router, dict dictionary.DictionaryIface) *Server {
 	mutex := sync.RWMutex{}
 	players := make(map[ulid.ULID]*player.ApiPlayer, 0)
 	games := make(map[ulid.ULID]*game.ApiGame, 0)
+	intFunc := rand.IntN
 
-	return &Server{router, &srv, &mutex, players, games, dict}
+	return &Server{router, &srv, &mutex, players, games, dict, intFunc}
 }
 
 func (s *Server) applyMiddleware() {
@@ -56,6 +59,7 @@ func (s *Server) routes() {
 	s.Router.Get("/player", useJsonContent(s.handleGetPlayers))
 	s.Router.Post("/player", useJsonContent(s.handlePostPlayer))
 	s.Router.Post("/game", useJsonContent(s.handlePostGame))
+	s.Router.Post("/start", handleError(s.handleStartGame))
 }
 
 func (s *Server) ui() {
