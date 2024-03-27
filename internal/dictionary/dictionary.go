@@ -31,8 +31,8 @@ type Definition struct {
 }
 
 type DictionaryIface interface {
-	Lookup(string) (*DictionaryWord, error)
-	Orchestrate(randomInt int) string
+	Orchestrate(int) string
+	GetWordApi(int) *DefinitionResponse
 }
 
 type Dictionary struct {
@@ -41,10 +41,6 @@ type Dictionary struct {
 	FsClient         fs.FS
 	RestClient       rest.RestClientIface
 	Writer           io.Writer
-}
-
-func (d Dictionary) Lookup(word string) (*DictionaryWord, error) {
-	return nil, nil
 }
 
 func (d Dictionary) getWord(randomInt int) (*DictionaryWord, error) {
@@ -124,6 +120,17 @@ func (d Dictionary) Orchestrate(randomInt int) string {
 		)
 	}
 	return def.Word
+}
+
+func (d Dictionary) GetWordApi(randomInt int) *DefinitionResponse {
+	word, _ := d.getWord(randomInt)
+	def, err := d.getDefinition(word)
+	for err != nil {
+		randomInt += 1
+		word, _ = d.getWord(randomInt)
+		def, err = d.getDefinition(word)
+	}
+	return def
 }
 
 func (d Dictionary) showHints(definitionResponse *DefinitionResponse) {

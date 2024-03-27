@@ -9,3 +9,8 @@ type NewPlayerRequest struct {
 type NewGameRequest struct {
 	PlayerID ulid.ULID `json:"player_id"`
 }
+
+type StartGameRequest struct {
+	PlayerID ulid.ULID `json:"player_id"`
+	GameId   ulid.ULID `json:"game_id"`
+}

@@ -2,6 +2,14 @@ package server
 
 import "net/http"
 
+type PlayerCreatedResponse struct {
+	PlayerID string `json:"player_id"`
+}
+
+type GameCreatedResponse struct {
+	GameID string `json:"game_id"`
+}
+
 func respondOk(w http.ResponseWriter, body []byte) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(body)

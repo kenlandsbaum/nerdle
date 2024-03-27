@@ -1,6 +1,7 @@
 package server
 
 import (
+	"essentials/nerdle/internal/dictionary"
 	"essentials/nerdle/internal/fileserver"
 	"essentials/nerdle/internal/game"
 	"essentials/nerdle/internal/player"
@@ -20,12 +21,13 @@ import (
 type Server struct {
 	Router chi.Router
 	*http.Server
-	mutex   *sync.RWMutex
-	players map[ulid.ULID]*player.ApiPlayer
-	games   map[ulid.ULID]*game.ApiGame
+	mutex      *sync.RWMutex
+	players    map[ulid.ULID]*player.ApiPlayer
+	games      map[ulid.ULID]*game.ApiGame
+	dictionary dictionary.DictionaryIface
 }
 
-func New(router chi.Router) *Server {
+func New(router chi.Router, dict dictionary.DictionaryIface) *Server {
 	srv := http.Server{
 		Addr:         os.Getenv("API_HOST"),
 		Handler:      router,
@@ -37,7 +39,7 @@ func New(router chi.Router) *Server {
 	players := make(map[ulid.ULID]*player.ApiPlayer, 0)
 	games := make(map[ulid.ULID]*game.ApiGame, 0)
 
-	return &Server{router, &srv, &mutex, players, games}
+	return &Server{router, &srv, &mutex, players, games, dict}
 }
 
 func (s *Server) applyMiddleware() {

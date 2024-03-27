@@ -38,17 +38,6 @@ func (m *MockFS) Open(string) (fs.File, error) {
 	return args.Get(0).(fs.File), args.Error(1)
 }
 
-func Test_Lookup(t *testing.T) {
-	testDict := Dictionary{}
-	actualV, actualE := testDict.Lookup("")
-	if actualV != nil {
-		t.Error("expected nil")
-	}
-	if actualE != nil {
-		t.Error("expected nil")
-	}
-}
-
 func Test_GetDefinition(t *testing.T) {
 	testRc := new(MockRest)
 	testFs := new(MockFS)

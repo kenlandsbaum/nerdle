@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"essentials/nerdle/internal/dictionary"
 	"net/http"
 	"os"
 	"testing"
@@ -10,11 +11,20 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+type testDict struct{}
+
+func (ts testDict) Orchestrate(_ int) string {
+	return ""
+}
+func (ts testDict) GetWordApi(int) *dictionary.DefinitionResponse {
+	return nil
+}
+
 func Test_serverRun(t *testing.T) {
 	os.Setenv("API_HOST", "localhost:8888")
 	r := chi.NewRouter()
 
-	srv := New(r)
+	srv := New(r, testDict{})
 
 	go func() {
 		time.Sleep(time.Second * 1)

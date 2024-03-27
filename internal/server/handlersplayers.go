@@ -4,7 +4,6 @@ import (
 	"errors"
 	"essentials/nerdle/internal/player"
 	"essentials/nerdle/internal/service/id"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -30,7 +29,7 @@ func (s *Server) handlePostPlayer(w http.ResponseWriter, r *http.Request) {
 	}
 	newPlayer := s.addPlayer(newPlayerRequest)
 	log.Info().Msgf("new player created: %v\n", newPlayer.Name)
-	respondCreated(w, []byte(fmt.Sprintf("created player %s", newPlayer.Id.String())))
+	respondCreated(w, mustMarshal(PlayerCreatedResponse{PlayerID: newPlayer.Id.String()}))
 }
 
 func (s *Server) addPlayer(newPlayerRequest *NewPlayerRequest) player.ApiPlayer {

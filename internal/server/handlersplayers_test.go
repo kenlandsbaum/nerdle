@@ -15,7 +15,7 @@ import (
 )
 
 func Test_handlePostPlayerSuccess(t *testing.T) {
-	expectedResponseBody := `created player`
+	expectedResponseBody := `{"player_id":"`
 	testRequestBody := []byte(`{"name":"ken"}`)
 	w := httptest.NewRecorder()
 	r, _ := http.NewRequest(http.MethodPost, "/", bytes.NewReader(testRequestBody))

@@ -1,6 +1,9 @@
 package server
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"log"
+)
 
 func marshalToJson(v any) ([]byte, error) {
 	bts, err := json.Marshal(v)
@@ -8,6 +11,14 @@ func marshalToJson(v any) ([]byte, error) {
 		return nil, err
 	}
 	return bts, nil
+}
+
+func mustMarshal(v any) []byte {
+	bts, err := json.Marshal(v)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return bts
 }
 
 func unmarshalToType[T any](bts []byte) (*T, error) {

@@ -41,7 +41,7 @@ func Test_handlePostGameSuccess(t *testing.T) {
 	defer result.Body.Close()
 	bts, _ := io.ReadAll(result.Body)
 
-	if !strings.Contains(string(bts), "game created") {
+	if !strings.Contains(string(bts), `"game_id":"`) {
 		t.Errorf("unexpected body %s\n", string(bts))
 	}
 }

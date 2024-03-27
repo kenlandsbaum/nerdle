@@ -7,12 +7,12 @@ import (
 )
 
 type ApiGame struct {
-	gamePlayer  *player.ApiPlayer
+	GamePlayer  *player.ApiPlayer
 	maxAttempts int
 	// solution    string
 	Id ulid.ULID
 }
 
 func NewApiGame(p *player.ApiPlayer, id ulid.ULID) *ApiGame {
-	return &ApiGame{gamePlayer: p, maxAttempts: 5, Id: id}
+	return &ApiGame{GamePlayer: p, maxAttempts: 5, Id: id}
 }
