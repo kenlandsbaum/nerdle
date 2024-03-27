@@ -3,6 +3,7 @@ package main
 import (
 	"essentials/nerdle/internal/dictionary"
 	"essentials/nerdle/internal/env"
+	"essentials/nerdle/internal/impl"
 	"essentials/nerdle/internal/rest"
 	"essentials/nerdle/internal/server"
 	"fmt"
@@ -21,6 +22,7 @@ func main() {
 		DictionaryApi:    os.Getenv("DICTIONARY_API"),
 		DictionarySource: os.Getenv("DICTIONARY_SOURCE"),
 		RestClient:       restClient,
+		FsClient:         impl.Opener{},
 	}
 	srv := server.New(chi.NewRouter(), dict)
 	if err := srv.Run(); err != nil {

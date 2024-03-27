@@ -59,7 +59,7 @@ func (s *Server) routes() {
 	s.Router.Get("/player", useJsonContent(s.handleGetPlayers))
 	s.Router.Post("/player", useJsonContent(s.handlePostPlayer))
 	s.Router.Post("/game", useJsonContent(s.handlePostGame))
-	s.Router.Post("/start", handleError(s.handleStartGame))
+	s.Router.Post("/start", useJsonContent(handleError(s.handleStartGame)))
 }
 
 func (s *Server) ui() {
