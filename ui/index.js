@@ -158,18 +158,37 @@ async function startGame() {
             body: JSON.stringify({player_id: playerId, game_id: state.gameId}), method: "POST"
         };
         const res = await fetch(startUrl, postConfig).then(r => r.json());
-        $("hints").innerHTML = `<h2>Hints from server</h2><pre>${JSON.stringify(res, null, 2)}</pre>`;
+        console.log(res)
+        $("hints").innerHTML = `<h2>Hints from server</h2><pre>${makeHints(res)}</pre>`;
         
     } catch(e) {
         console.error(e);
     }
 }
 
+function makeHints({word, meanings}) {
+    const wStar = `<p>Word: ${word}</p>`;
+    const list = mapMeanings(meanings);
+    const ul = `<ul>${list}</ul>`;
+    return `<div>${wStar}${ul}</div>`;
+  }
+  
+  function mapMeanings(meanings) {
+    return meanings.map((m) => {
+      const {partOfSpeech, definitions} = m;
+      return `<li><p>Part of speech: ${partOfSpeech}</p>${mapDefinitions(definitions)}`;
+    }).join("");
+  }
+  
+  function mapDefinitions(definitions) {
+    return definitions.map((d, i) => `<p>${i}. ${d.definition}</p>`).join("");
+  }
+
 function removeMe() {
     $("app").removeChild(this.parentNode);
 }
 function makeModal(msg) {
-    const modal = createElement("div", {id: "modal", "style": "border:1px solid #000;position:absolute;top:0;left:0;z-index:2;background-color:#333;color:#fff;padding:1em;"});
+    const modal = createElement("div", {id: "modal", "style": "border:1px solid #000;position:fixed;top:0;left:0;z-index:2;background-color:#333;color:#fff;padding:1em;"});
     const p = createElement("p", msg);
     const b = withEvent("click", removeMe)(createElement("button", "X"));
     append(modal, [b, p]);
