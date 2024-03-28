@@ -8,6 +8,7 @@ import (
 	"essentials/nerdle/internal/player"
 	"essentials/nerdle/internal/rest"
 	"essentials/nerdle/internal/scoreboard"
+	"essentials/nerdle/internal/types"
 	"math/rand/v2"
 	"net/http"
 	"os"
@@ -29,7 +30,7 @@ func main() {
 	RunGame(dict)
 }
 
-func RunGame(dict dictionary.DictionaryIface) {
+func RunGame(dict types.DictionaryIface) {
 	reader := os.Stdin
 	writer := os.Stdout
 	scoreboard := scoreboard.Scoreboard{Board: make(map[string]int, 1), Writer: writer}

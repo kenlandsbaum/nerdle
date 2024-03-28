@@ -8,6 +8,15 @@ import (
 	"testing"
 )
 
+func TestNew(t *testing.T) {
+	testReader := strings.NewReader("")
+	testPlayer := player.Player{}
+	testGame := New(&testPlayer, testReader, "lol")
+	if testGame == nil {
+		t.Errorf("expected a game")
+	}
+}
+
 func Test_getGuess(t *testing.T) {
 	input := "testguess"
 	testGame := Game{reader: strings.NewReader(input)}

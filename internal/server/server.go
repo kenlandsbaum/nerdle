@@ -1,10 +1,10 @@
 package server
 
 import (
-	"essentials/nerdle/internal/dictionary"
 	"essentials/nerdle/internal/fileserver"
 	"essentials/nerdle/internal/game"
 	"essentials/nerdle/internal/player"
+	"essentials/nerdle/internal/types"
 	"fmt"
 	"math/rand/v2"
 	"net/http"
@@ -25,11 +25,11 @@ type Server struct {
 	mutex      *sync.RWMutex
 	players    map[ulid.ULID]*player.ApiPlayer
 	games      map[ulid.ULID]*game.ApiGame
-	dictionary dictionary.DictionaryIface
+	dictionary types.DictionaryIface
 	intFunc    func(int) int
 }
 
-func New(router chi.Router, dict dictionary.DictionaryIface) *Server {
+func New(router chi.Router, dict types.DictionaryIface) *Server {
 	srv := http.Server{
 		Addr:         os.Getenv("API_HOST"),
 		Handler:      router,

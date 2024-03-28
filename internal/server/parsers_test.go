@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"testing"
 )
 
@@ -44,22 +45,66 @@ func Test_decodeToType(t *testing.T) {
 		Age      int      `json:"age"`
 		SubThing subThing `json:"subThing"`
 	}
-	testBody := []byte(`{"name":"ken","age":100,"subThing":{"otherOne":"lol","otherTwo":"umad"}}`)
+	t.Run("should decode fine", func(t *testing.T) {
+		testBody := []byte(`{"name":"ken","age":100,"subThing":{"otherOne":"lol","otherTwo":"umad"}}`)
 
-	res, err := decodeToType[thing](bytes.NewReader(testBody))
-	if err != nil {
-		t.Errorf("expected nil error but got %s", err.Error())
+		res, err := decodeToType[thing](bytes.NewReader(testBody))
+		if err != nil {
+			t.Errorf("expected nil error but got %s", err.Error())
+		}
+		if res.Name != "ken" {
+			t.Errorf("got %s but expected %s\n", res.Name, "ken")
+		}
+		if res.Age != 100 {
+			t.Errorf("got %d but expected %d\n", res.Age, 100)
+		}
+		if res.SubThing.OtherOne != "lol" {
+			t.Errorf("got %s but expected %s\n", res.SubThing.OtherOne, "lol")
+		}
+		if res.SubThing.OtherTwo != "umad" {
+			t.Errorf("got %s but expected %s\n", res.SubThing.OtherTwo, "umad")
+		}
+	})
+
+	t.Run("should decode fine", func(t *testing.T) {
+		testBody := []byte(`{"name":"ken,"age":100,"subThing":{"otherOne":"lol","otherTwo":"umad"}}`)
+
+		_, err := decodeToType[thing](bytes.NewReader(testBody))
+		if err == nil {
+			t.Errorf("expected non-nil error")
+		}
+	})
+}
+
+func Test_parseRequestBody(t *testing.T) {
+	type bodyThing struct {
+		Name   string   `json:"name"`
+		Things []string `json:"things"`
 	}
-	if res.Name != "ken" {
-		t.Errorf("got %s but expected %s\n", res.Name, "ken")
-	}
-	if res.Age != 100 {
-		t.Errorf("got %d but expected %d\n", res.Age, 100)
-	}
-	if res.SubThing.OtherOne != "lol" {
-		t.Errorf("got %s but expected %s\n", res.SubThing.OtherOne, "lol")
-	}
-	if res.SubThing.OtherTwo != "umad" {
-		t.Errorf("got %s but expected %s\n", res.SubThing.OtherTwo, "umad")
-	}
+	testBody := []byte(`{"name":"ken","things":["one","two","three"]}`)
+
+	t.Run("should parse fine", func(t *testing.T) {
+		testBody := []byte(`{"name":"ken","things":["one","two","three"]}`)
+		res, err := parseRequestBody[bodyThing](io.NopCloser(bytes.NewReader(testBody)))
+
+		if err != nil {
+			t.Errorf("expected nil error but got %s\n", err.Error())
+		}
+		if len(res.Things) != 3 {
+			t.Errorf("got %d but expected 3\n", len(res.Things))
+		}
+		for i, el := range []string{"one", "two", "three"} {
+			if res.Things[i] != el {
+				t.Errorf("got %s but expected %s\n", res.Things[i], el)
+			}
+		}
+	})
+	t.Run("should fail with an error", func(t *testing.T) {
+		testBody = []byte(`{"name":"ken,"things":["one","two","three"]}`)
+		_, err := parseRequestBody[bodyThing](io.NopCloser(bytes.NewReader(testBody)))
+
+		if err == nil {
+			t.Errorf("expected non-nil error")
+		}
+	})
 }

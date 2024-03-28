@@ -30,11 +30,6 @@ type Definition struct {
 	DefinitionString string `json:"definition"`
 }
 
-type DictionaryIface interface {
-	Orchestrate(int) string
-	GetWordApi(int) *DefinitionResponse
-}
-
 type Dictionary struct {
 	DictionaryApi    string
 	DictionarySource string
