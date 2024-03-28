@@ -17,14 +17,7 @@ import (
 )
 
 func (s *Server) handlePostGame(w http.ResponseWriter, r *http.Request) {
-	body := r.Body
-	defer body.Close()
-	bodyBytes, err := io.ReadAll(body)
-	if err != nil {
-		respondBadRequestErr(w, err)
-		return
-	}
-	newGameRequest, err := unmarshalToType[NewGameRequest](bodyBytes)
+	newGameRequest, err := decodeRequestBody[NewGameRequest](r.Body)
 	if err != nil {
 		respondBadRequestErr(w, err)
 		return
@@ -53,13 +46,7 @@ func (s *Server) getPlayer(id ulid.ULID) (*player.ApiPlayer, error) {
 type HandlerFuncErr func(w http.ResponseWriter, r *http.Request) error
 
 func (s *Server) handleStartGame(w http.ResponseWriter, r *http.Request) error {
-	body := r.Body
-	defer body.Close()
-	bodyBytes, err := io.ReadAll(body)
-	if err != nil {
-		return err
-	}
-	startGameRequest, err := unmarshalToType[StartGameRequest](bodyBytes)
+	startGameRequest, err := decodeRequestBody[StartGameRequest](r.Body)
 	if err != nil {
 		return err
 	}

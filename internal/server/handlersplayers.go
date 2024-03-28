@@ -4,21 +4,13 @@ import (
 	"errors"
 	"essentials/nerdle/internal/player"
 	"essentials/nerdle/internal/service/id"
-	"io"
 	"net/http"
 
 	"github.com/rs/zerolog/log"
 )
 
 func (s *Server) handlePostPlayer(w http.ResponseWriter, r *http.Request) {
-	body := r.Body
-	defer body.Close()
-	bodyBytes, err := io.ReadAll(body)
-	if err != nil {
-		respondBadRequestErr(w, err)
-		return
-	}
-	newPlayerRequest, err := unmarshalToType[NewPlayerRequest](bodyBytes)
+	newPlayerRequest, err := decodeRequestBody[NewPlayerRequest](r.Body)
 	if err != nil {
 		respondBadRequestErr(w, err)
 		return
