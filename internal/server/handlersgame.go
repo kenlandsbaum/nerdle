@@ -61,19 +61,6 @@ func (s *Server) handleStartGame(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func handleError(fn HandlerFuncErr) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := fn(w, r); err != nil {
-			switch err.Error() {
-			case "this player is not playing this game":
-				respondBadRequestErr(w, err)
-			default:
-				respondInternalErr(w, err)
-			}
-		}
-	}
-}
-
 func (s *Server) getRandomInt() int {
 	dictionarySize, err := strconv.Atoi(os.Getenv("DICTIONARY_SIZE"))
 	errs.PanicIfErr(err)
