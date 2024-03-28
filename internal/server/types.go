@@ -10,9 +10,11 @@ import (
 type ApiPlayersIface interface {
 	Add(*player.ApiPlayer)
 	Get() map[ulid.ULID]*player.ApiPlayer
+	GetById(ulid.ULID) (*player.ApiPlayer, bool)
 }
 
 type ApiGamesIface interface {
 	Add(*game.ApiGame)
 	Delete(ulid.ULID)
+	GetById(ulid.ULID) (*game.ApiGame, bool)
 }

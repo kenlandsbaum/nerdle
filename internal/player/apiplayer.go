@@ -23,6 +23,13 @@ func (a *ApiPlayers) Add(p *ApiPlayer) {
 	a.mutex.Unlock()
 }
 
+func (a *ApiPlayers) GetById(id ulid.ULID) (*ApiPlayer, bool) {
+	a.mutex.Lock()
+	player, ok := a.Players[id]
+	a.mutex.Unlock()
+	return player, ok
+}
+
 func (a *ApiPlayers) Get() map[ulid.ULID]*ApiPlayer {
 	return a.Players
 }

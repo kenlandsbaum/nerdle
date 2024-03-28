@@ -12,7 +12,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/oklog/ulid/v2"
@@ -25,14 +24,13 @@ func Test_handlePostGameSuccess(t *testing.T) {
 	testBody := fmt.Sprintf(`{"player_id":"%s"}`, testId)
 	testRequestBody := []byte(testBody)
 	testPlayer := player.ApiPlayer{Id: testId, Name: "ken"}
+	testPlayers := testApiPlayers{players: map[ulid.ULID]*player.ApiPlayer{testId: &testPlayer}}
+	testGames := testApiGames{}
+
 	w := httptest.NewRecorder()
 	r, _ := http.NewRequest(http.MethodPost, "/test", bytes.NewReader(testRequestBody))
 
-	s := Server{
-		mutex:   &sync.RWMutex{},
-		players: map[ulid.ULID]*player.ApiPlayer{testId: &testPlayer},
-		games:   make(map[ulid.ULID]*game.ApiGame, 0),
-	}
+	s := Server{players: &testPlayers, games: &testGames}
 
 	s.handlePostGame(w, r)
 
@@ -54,14 +52,12 @@ func Test_handlePostGameError(t *testing.T) {
 	testId := id.GetUlid()
 	testBody := fmt.Sprintf(`{"player_id":"%s"}`, testId)
 	testRequestBody := []byte(testBody)
+	testPlayers := testApiPlayers{players: map[ulid.ULID]*player.ApiPlayer{}}
+	testGames := testApiGames{}
 	w := httptest.NewRecorder()
 	r, _ := http.NewRequest(http.MethodPost, "/test", bytes.NewReader(testRequestBody))
 
-	s := Server{
-		mutex:   &sync.RWMutex{},
-		players: make(map[ulid.ULID]*player.ApiPlayer, 0),
-		games:   make(map[ulid.ULID]*game.ApiGame, 0),
-	}
+	s := Server{players: &testPlayers, games: &testGames}
 
 	s.handlePostGame(w, r)
 
@@ -105,9 +101,11 @@ func Test_handleStartGame(t *testing.T) {
 		fmt.Sprintf(`{"game_id":"%s","player_id":"%s"}`, testGameId, testPlayerId))
 
 	testPlayer1 := player.ApiPlayer{Id: testPlayerId}
+	testPlayers := testApiPlayers{players: map[ulid.ULID]*player.ApiPlayer{testPlayerId: &testPlayer1}}
 	testGame := game.ApiGame{GamePlayer: &testPlayer1}
+	testGames := testApiGames{games: map[ulid.ULID]*game.ApiGame{testGameId: &testGame}}
 
-	s := Server{games: map[ulid.ULID]*game.ApiGame{testGameId: &testGame}, intFunc: testIntFunc, dictionary: mockDict}
+	s := Server{games: &testGames, players: &testPlayers, intFunc: testIntFunc, dictionary: mockDict}
 
 	w := httptest.NewRecorder()
 	r, _ := http.NewRequest(http.MethodPost, "/test", bytes.NewReader(testRequestbody))
@@ -136,8 +134,10 @@ func Test_handleStartGame(t *testing.T) {
 	}
 	assert.EqualValues(t, &expected, parsedResponse)
 
-	savedSolution := s.games[testGameId].Solution
-	assert.EqualValues(t, "test", savedSolution)
+	game, ok := s.games.GetById(testGameId)
+	assert.True(t, ok)
+
+	assert.EqualValues(t, "test", game.Solution)
 
 	testBadRequestbody := []byte(
 		fmt.Sprintf(`{"game_id":"%s","player_id":"%s"}`, testGameId, id.GetUlid()))
@@ -154,10 +154,10 @@ func Test_handleGuess(t *testing.T) {
 	testGameId := id.GetUlid()
 	testPlayer := player.ApiPlayer{Attempts: make([]string, 0), Name: "ken", Id: testPlayerId}
 	testGame := game.ApiGame{GamePlayer: &testPlayer, Id: testGameId, Solution: "funkytest", MaxAttempts: 5}
-	s := Server{
-		games: map[ulid.ULID]*game.ApiGame{testGameId: &testGame},
-		mutex: &sync.RWMutex{},
-	}
+	testPlayers := testApiPlayers{players: map[ulid.ULID]*player.ApiPlayer{testPlayerId: &testPlayer}}
+	testGames := testApiGames{games: map[ulid.ULID]*game.ApiGame{testGameId: &testGame}}
+
+	s := Server{games: &testGames, players: &testPlayers}
 	t.Run("should fail and communicate number of attempts remaining", func(t *testing.T) {
 		testPostBodyFail := []byte(fmt.Sprintf(`{"game_id":"%s","guess":"funkytst"}`, testGameId))
 		w := httptest.NewRecorder()
@@ -190,7 +190,7 @@ func Test_handleGuess(t *testing.T) {
 		if string(bodySuccess) != `{"status":"a winner is you!"}` {
 			t.Errorf("got %s but expected {\"status\":\"a winner is you!\"}\n", string(bodySuccess))
 		}
-		if _, testOk := s.games[testGameId]; testOk {
+		if _, testOk := s.games.GetById(testGameId); testOk {
 			t.Errorf("expected game to not exist on server at this point")
 		}
 	})

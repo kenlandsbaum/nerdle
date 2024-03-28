@@ -8,19 +8,19 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/oklog/ulid/v2"
 )
 
 func Test_handlePostPlayerSuccess(t *testing.T) {
+	testPlayers := testApiPlayers{players: make(map[ulid.ULID]*player.ApiPlayer, 1)}
 	expectedResponseBody := `{"player_id":"`
 	testRequestBody := []byte(`{"name":"ken"}`)
 	w := httptest.NewRecorder()
 	r, _ := http.NewRequest(http.MethodPost, "/", bytes.NewReader(testRequestBody))
 
-	s := Server{players: make(map[ulid.ULID]*player.ApiPlayer, 0), mutex: &sync.RWMutex{}}
+	s := Server{players: &testPlayers}
 	s.handlePostPlayer(w, r)
 	result := w.Result()
 
@@ -36,12 +36,13 @@ func Test_handlePostPlayerSuccess(t *testing.T) {
 }
 
 func Test_handlePostPlayerFailure(t *testing.T) {
+	testPlayers := testApiPlayers{players: make(map[ulid.ULID]*player.ApiPlayer, 1)}
 	expectedResponseBody := `missing required property 'name'`
 	testRequestBody := []byte(`{"notname":"ken"}`)
 	w := httptest.NewRecorder()
 	r, _ := http.NewRequest(http.MethodPost, "/", bytes.NewReader(testRequestBody))
 
-	s := Server{players: make(map[ulid.ULID]*player.ApiPlayer, 0)}
+	s := Server{players: &testPlayers}
 	s.handlePostPlayer(w, r)
 	result := w.Result()
 
@@ -57,18 +58,19 @@ func Test_handlePostPlayerFailure(t *testing.T) {
 }
 
 func Test_handleGetPlayersSuccess(t *testing.T) {
+	testPlayers := testApiPlayers{players: make(map[ulid.ULID]*player.ApiPlayer, 2)}
 	type testCase struct {
 		in       int
 		expected string
 	}
 	testCases := []testCase{{in: 0, expected: "player1"}, {in: 1, expected: "player2"}}
 
-	s := Server{players: make(map[ulid.ULID]*player.ApiPlayer, 0)}
+	s := Server{players: &testPlayers}
 	u1 := id.GetUlid()
 	u2 := id.GetUlid()
 
-	s.players[u1] = &player.ApiPlayer{Name: "player1", Id: u1}
-	s.players[u2] = &player.ApiPlayer{Name: "player2", Id: u2}
+	testPlayers.Add(&player.ApiPlayer{Name: "player1", Id: u1})
+	testPlayers.Add(&player.ApiPlayer{Name: "player2", Id: u2})
 
 	w := httptest.NewRecorder()
 	r, _ := http.NewRequest(http.MethodGet, "/", nil)

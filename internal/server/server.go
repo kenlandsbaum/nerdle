@@ -15,16 +15,14 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/oklog/ulid/v2"
 	"github.com/rs/zerolog/log"
 )
 
 type Server struct {
 	Router chi.Router
 	*http.Server
-	mutex      *sync.RWMutex
-	players    map[ulid.ULID]*player.ApiPlayer
-	games      map[ulid.ULID]*game.ApiGame
+	players    ApiPlayersIface
+	games      ApiGamesIface
 	dictionary types.DictionaryIface
 	intFunc    func(int) int
 }
@@ -37,12 +35,12 @@ func New(router chi.Router, dict types.DictionaryIface) *Server {
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,
 	}
-	mutex := sync.RWMutex{}
-	players := make(map[ulid.ULID]*player.ApiPlayer, 0)
-	games := make(map[ulid.ULID]*game.ApiGame, 0)
+
+	players := player.NewApiPlayers(&sync.RWMutex{})
+	games := game.NewApiGames(&sync.RWMutex{})
 	intFunc := rand.IntN
 
-	return &Server{router, &srv, &mutex, players, games, dict, intFunc}
+	return &Server{router, &srv, players, games, dict, intFunc}
 }
 
 func (s *Server) applyMiddleware() {

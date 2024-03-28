@@ -29,6 +29,13 @@ func (a *ApiGames) Add(g *ApiGame) {
 	a.mutex.Unlock()
 }
 
+func (a *ApiGames) GetById(id ulid.ULID) (*ApiGame, bool) {
+	a.mutex.Lock()
+	game, ok := a.Games[id]
+	a.mutex.Unlock()
+	return game, ok
+}
+
 func (a *ApiGames) Delete(id ulid.ULID) {
 	a.mutex.Lock()
 	delete(a.Games, id)

@@ -8,7 +8,6 @@ import (
 	"essentials/nerdle/internal/service/id"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -28,15 +27,13 @@ func (s *Server) handlePostGame(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	gameId := id.GetUlid()
-	s.games[gameId] = game.NewApiGame(p, gameId)
+	s.games.Add(game.NewApiGame(p, gameId))
 	respondCreated(w, mustMarshal(GameCreatedResponse{GameID: gameId.String()}))
 }
 
 func (s *Server) getPlayer(id ulid.ULID) (*player.ApiPlayer, error) {
 	var p *player.ApiPlayer
-	s.mutex.RLock()
-	p, ok := s.players[id]
-	s.mutex.RUnlock()
+	p, ok := s.players.GetById(id)
 	if !ok {
 		return nil, errors.New("player not found")
 	}
@@ -50,7 +47,10 @@ func (s *Server) handleStartGame(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	game := s.games[startGameRequest.GameId]
+	game, ok := s.games.GetById(startGameRequest.GameId) //[startGameRequest.GameId]
+	if !ok {
+		return errors.New("you must create a new game")
+	}
 	if game.GamePlayer.Id != startGameRequest.PlayerID {
 		return errors.New("this player is not playing this game")
 	}
@@ -100,9 +100,8 @@ func (s *Server) handleGuess(w http.ResponseWriter, r *http.Request) {
 		respondInternalErr(w, err)
 		return
 	}
-	log.Println("body received:", string(bodyBytes))
 	guessRequest, err := unmarshalToType[GuessRequest](bodyBytes)
-	game, ok := s.games[guessRequest.GameId]
+	game, ok := s.games.GetById(guessRequest.GameId)
 	if !ok {
 		respondBadRequestErr(w, err)
 		return
@@ -115,7 +114,5 @@ func (s *Server) handleGuess(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondOk(w, []byte(`{"status":"a winner is you!"}`))
-	s.mutex.Lock()
-	delete(s.games, guessRequest.GameId)
-	s.mutex.Unlock()
+	s.games.Delete(guessRequest.GameId)
 }

@@ -26,15 +26,13 @@ func (s *Server) handlePostPlayer(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) addPlayer(newPlayerRequest *NewPlayerRequest) player.ApiPlayer {
 	newPlayer := player.ApiPlayer{Name: newPlayerRequest.Name, Id: id.GetUlid()}
-	s.mutex.Lock()
-	s.players[newPlayer.Id] = &newPlayer
-	s.mutex.Unlock()
+	s.players.Add(&newPlayer)
 	return newPlayer
 }
 
 func (s *Server) handleGetPlayers(w http.ResponseWriter, _ *http.Request) {
 	playersSlice := make([]*player.ApiPlayer, 0)
-	for _, p := range s.players {
+	for _, p := range s.players.Get() {
 		playersSlice = append(playersSlice, p)
 	}
 	playersBytes, err := marshalToJson(playersSlice)
