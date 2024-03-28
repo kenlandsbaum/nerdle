@@ -136,6 +136,9 @@ func Test_handleStartGame(t *testing.T) {
 	}
 	assert.EqualValues(t, &expected, parsedResponse)
 
+	savedSolution := s.games[testGameId].Solution
+	assert.EqualValues(t, "test", savedSolution)
+
 	testBadRequestbody := []byte(
 		fmt.Sprintf(`{"game_id":"%s","player_id":"%s"}`, testGameId, id.GetUlid()))
 
@@ -144,4 +147,51 @@ func Test_handleStartGame(t *testing.T) {
 	expectedError := s.handleStartGame(w2, r2)
 
 	assert.EqualValues(t, "this player is not playing this game", expectedError.Error())
+}
+
+func Test_handleGuess(t *testing.T) {
+	testPlayerId := id.GetUlid()
+	testGameId := id.GetUlid()
+	testPlayer := player.ApiPlayer{Attempts: make([]string, 0), Name: "ken", Id: testPlayerId}
+	testGame := game.ApiGame{GamePlayer: &testPlayer, Id: testGameId, Solution: "funkytest", MaxAttempts: 5}
+	s := Server{
+		games: map[ulid.ULID]*game.ApiGame{testGameId: &testGame},
+		mutex: &sync.RWMutex{},
+	}
+	t.Run("should fail and communicate number of attempts remaining", func(t *testing.T) {
+		testPostBodyFail := []byte(fmt.Sprintf(`{"game_id":"%s","guess":"funkytst"}`, testGameId))
+		w := httptest.NewRecorder()
+		r, _ := http.NewRequest(http.MethodPost, "/test", bytes.NewReader(testPostBodyFail))
+
+		s.handleGuess(w, r)
+
+		result := w.Result()
+		defer result.Body.Close()
+		bodyFail, _ := io.ReadAll(result.Body)
+		if !strings.Contains(string(bodyFail), `"remainingAttempts":4`) {
+			t.Errorf("got %s but expected to contain \remainingAttempts\":4\n", string(bodyFail))
+		}
+	})
+
+	t.Run("should succeed and give winning message, delete the game", func(t *testing.T) {
+		testPostBodySuccess := []byte(fmt.Sprintf(`{"game_id":"%s","guess":"funkytest"}`, testGameId))
+
+		w := httptest.NewRecorder()
+		r, e := http.NewRequest(http.MethodPost, "/test", bytes.NewReader(testPostBodySuccess))
+		if e != nil {
+			t.Fatal(e)
+		}
+		s.handleGuess(w, r)
+
+		result := w.Result()
+		defer result.Body.Close()
+		bodySuccess, _ := io.ReadAll(result.Body)
+
+		if string(bodySuccess) != `{"status":"a winner is you!"}` {
+			t.Errorf("got %s but expected {\"status\":\"a winner is you!\"}\n", string(bodySuccess))
+		}
+		if _, testOk := s.games[testGameId]; testOk {
+			t.Errorf("expected game to not exist on server at this point")
+		}
+	})
 }

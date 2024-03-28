@@ -8,11 +8,11 @@ import (
 
 type ApiGame struct {
 	GamePlayer  *player.ApiPlayer
-	maxAttempts int
-	// solution    string
-	Id ulid.ULID
+	MaxAttempts int
+	Solution    string
+	Id          ulid.ULID
 }
 
 func NewApiGame(p *player.ApiPlayer, id ulid.ULID) *ApiGame {
-	return &ApiGame{GamePlayer: p, maxAttempts: 5, Id: id}
+	return &ApiGame{GamePlayer: p, MaxAttempts: 5, Id: id}
 }

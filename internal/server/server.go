@@ -55,11 +55,12 @@ func (s *Server) applyMiddleware() {
 }
 
 func (s *Server) routes() {
-	s.Router.Get("/", useJsonContent(s.handleHome))
+	s.Router.Get("/", useTextContent(s.handleHome))
 	s.Router.Get("/player", useJsonContent(s.handleGetPlayers))
 	s.Router.Post("/player", useJsonContent(s.handlePostPlayer))
 	s.Router.Post("/game", useJsonContent(s.handlePostGame))
 	s.Router.Post("/start", useJsonContent(handleError(s.handleStartGame)))
+	s.Router.Post("/guess", useJsonContent(s.handleGuess))
 }
 
 func (s *Server) ui() {

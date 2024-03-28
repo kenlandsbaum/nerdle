@@ -1,4 +1,7 @@
-const playerUrl = "http://localhost:8888/player"
+const playerUrl = "http://localhost:8888/player";
+const gameUrl = "http://localhost:8888/game";
+const startUrl = "http://localhost:8888/start";
+const guessUrl = "http://localhost:8888/guess";
 const fetchConfig = {headers: {"Content-Type": "application/json", "Authorization": "somevalue"}};
 
 function $(id) {
@@ -32,33 +35,38 @@ function append(target, children) {
 const state = {
     nameValue: "",
     answer: "",
-    players: [],
+    players: {},
+    gameId: "",
     guessValue: "",
-}
+};
 
 function nameUI() {
     const nameLabel = createElement("label", "Enter Name:");
     const nameInput = withEvent("change", handleNameChange)(createElement("input", {id: "nameInput"}));
-    const nameButton = withEvent("click", handleNameSend)(createElement("button", "send"));
+    const nameButton = withEvent("click", handleNameSend)(createElement("button", "send player name"));
     return [nameLabel, nameInput, nameButton];
 }
 
 function gamePlayUI() {
+    const gameButton = withEvent("click", createGame)(createElement("button", "create a game"));
+    const startButton = withEvent("click", startGame)(createElement("button", "start game"));
     const hints = createElement("div", {id: "hints"});
     const hintsTitle = createElement("h2", "Hints from server");
     append(hints, [hintsTitle]);
+
     const guessLabel = createElement("label", "Guess the word:")
     const guessInput =  withEvent("change", handleGuessChange)(createElement("input", {id: "guessInput"}));
     const guessButton = withEvent("click", handleGuessSend)(createElement("button", "submit guess"));
-    return [hints, guessInput, guessButton];
+    return [gameButton, startButton, hints, guessLabel, guessInput, guessButton];
 }
 
 function app() {
+    console.log("starting ui...");
     const container = $("app");
     const title = createElement("h1", "Play Word Games");
-    const fetcherButton = withEvent("click", getPlayers)(createElement("button", "test fetch"));
+    const fetcherButton = withEvent("click", getPlayers)(createElement("button", "test fetch players"));
 
-    append(container, [title, ...nameUI(), fetcherButton, ...gamePlayUI()]);
+    append(container, [title, ...nameUI(), ...gamePlayUI(), fetcherButton]);
 }
 
 async function handleNameSend() {
@@ -66,7 +74,7 @@ async function handleNameSend() {
         console.log(`posting value: ${state.nameValue}`);
         await createPlayer();
     }
-    state.inputValue = "";
+    state.nameValue = "";
     $("nameInput").value = "";
 }
 
@@ -78,12 +86,27 @@ function handleGuessChange(ev) {
     state.guessValue = ev.target.value;
 }
 
-function handleGuessSend() {
-    console.log(`posting guess word '${state.guessValue}' to api...`);
-    state.guessValue = "";
+async function handleGuessSend() {
+    try {
+        const body = JSON.stringify({guess: state.guessValue, game_id: state.gameId})
+        console.log(`posting body ${body} to api...`);
+        const postConfig = {
+            ...fetchConfig,
+            body,
+            method: "POST"
+        };
+        const res = await fetch(guessUrl, postConfig).then(r => r.json());
+        makeModal(res.status);
+        if (res.status.includes("winner")) {
+            $("hints").innerHTML = "<h2>Hints from server</h2>";
+            $("guessInput").value = "";
+        }
+        console.log(res);
+    } catch (e) {
+        console.error(e);
+    }
+    
 }
-
-app();
 
 async function getPlayers() {
     const res = await fetch(playerUrl, fetchConfig).then(r => r.json());
@@ -92,9 +115,65 @@ async function getPlayers() {
 }
 
 async function createPlayer() {
-    const playerRequest = {name: state.nameValue};
-    const postConfig = {...fetchConfig, body: JSON.stringify(playerRequest), method: "POST"};
-    const res = await fetch(playerUrl, postConfig).then(r => r.text());
-
-    console.log(res);
+    try {
+        const nameValue = state.nameValue
+        const playerRequest = {name: nameValue};
+        const postConfig = {...fetchConfig, body: JSON.stringify(playerRequest), method: "POST"};
+        const res = await fetch(playerUrl, postConfig).then(r => r.json());
+    
+        state.players[res.player_id] = nameValue;
+        console.log(state);
+    } catch (e) {
+        console.error(e);
+    }
 }
+
+async function createGame() {
+    try {
+        const playerId = Object.keys(state.players).find((k, i) => {
+            if (i === 0) {
+                return k;
+            }
+        });
+        const postConfig = {...fetchConfig, body: JSON.stringify({player_id: playerId}), method: "POST"};
+        const res = await fetch(gameUrl, postConfig).then(r => r.json());
+    
+        state.gameId = res.game_id;
+        console.log("response: ", res);
+        console.log("state: ", state);
+
+    } catch (e) {
+        console.error(e);
+    }
+}
+async function startGame() {
+    try {
+        const playerId = Object.keys(state.players).find((k, i) => {
+            if (i === 0) {
+                return k;
+            }
+        });
+        const postConfig = {
+            ...fetchConfig,
+            body: JSON.stringify({player_id: playerId, game_id: state.gameId}), method: "POST"
+        };
+        const res = await fetch(startUrl, postConfig).then(r => r.json());
+        $("hints").innerHTML = `<h2>Hints from server</h2><pre>${JSON.stringify(res, null, 2)}</pre>`;
+        
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+function removeMe() {
+    $("app").removeChild(this.parentNode);
+}
+function makeModal(msg) {
+    const modal = createElement("div", {id: "modal", "style": "border:1px solid #000;position:absolute;top:0;left:0;z-index:2;background-color:#333;color:#fff;padding:1em;"});
+    const p = createElement("p", msg);
+    const b = withEvent("click", removeMe)(createElement("button", "X"));
+    append(modal, [b, p]);
+    $("app").appendChild(modal);
+}
+
+app();

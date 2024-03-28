@@ -16,3 +16,10 @@ func useJsonContent(handler http.HandlerFunc) http.HandlerFunc {
 		handler(w, r)
 	}
 }
+
+func useTextContent(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "text/plain")
+		handler(w, r)
+	}
+}

@@ -11,7 +11,7 @@ func authenticate(next http.Handler) http.Handler {
 		authHeader := r.Header.Get("authorization")
 		path := r.URL.Path
 		log.Println("path", path)
-		if authHeader == "" && path != "/ui/" && path != "/ui/index.js" && path != "/ui/favicon.ico" {
+		if authHeader == "" && path != "/ui/" && path != "/ui/index.js" && path != "/favicon.ico" {
 			respondUnauthorizedErr(w, errors.New("you don't even have token fool"))
 			return
 		}

@@ -14,3 +14,8 @@ type StartGameRequest struct {
 	PlayerID ulid.ULID `json:"player_id"`
 	GameId   ulid.ULID `json:"game_id"`
 }
+
+type GuessRequest struct {
+	GameId ulid.ULID `json:"game_id"`
+	Guess  string    `json:"guess"`
+}

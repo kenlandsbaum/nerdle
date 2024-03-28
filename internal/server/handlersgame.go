@@ -6,7 +6,9 @@ import (
 	"essentials/nerdle/internal/game"
 	"essentials/nerdle/internal/player"
 	"essentials/nerdle/internal/service/id"
+	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -66,6 +68,8 @@ func (s *Server) handleStartGame(w http.ResponseWriter, r *http.Request) error {
 		return errors.New("this player is not playing this game")
 	}
 	definitionResponse := s.dictionary.GetWordApi(s.getRandomInt())
+	game.Solution = definitionResponse.Word
+	definitionResponse.Word = mask(definitionResponse.Word)
 	respondOk(w, mustMarshal(definitionResponse))
 	return nil
 }
@@ -73,7 +77,12 @@ func (s *Server) handleStartGame(w http.ResponseWriter, r *http.Request) error {
 func handleError(fn HandlerFuncErr) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := fn(w, r); err != nil {
-			respondBadRequestErr(w, err)
+			switch err.Error() {
+			case "this player is not playing this game":
+				respondBadRequestErr(w, err)
+			default:
+				respondInternalErr(w, err)
+			}
 		}
 	}
 }
@@ -82,4 +91,44 @@ func (s *Server) getRandomInt() int {
 	dictionarySize, err := strconv.Atoi(os.Getenv("DICTIONARY_SIZE"))
 	errs.PanicIfErr(err)
 	return s.intFunc(dictionarySize)
+}
+
+func mask(s string) string {
+	var masked string
+	for i, c := range s {
+		if i == 0 {
+			masked += string(c)
+		} else {
+			masked += "*"
+		}
+	}
+	return masked
+}
+
+func (s *Server) handleGuess(w http.ResponseWriter, r *http.Request) {
+	body := r.Body
+	defer body.Close()
+	bodyBytes, err := io.ReadAll(body)
+	if err != nil {
+		respondInternalErr(w, err)
+		return
+	}
+	log.Println("body received:", string(bodyBytes))
+	guessRequest, err := unmarshalToType[GuessRequest](bodyBytes)
+	game, ok := s.games[guessRequest.GameId]
+	if !ok {
+		respondBadRequestErr(w, err)
+		return
+	}
+	game.GamePlayer.Attempts = append(game.GamePlayer.Attempts, guessRequest.Guess)
+	if game.Solution != guessRequest.Guess {
+		remaining := game.MaxAttempts - len(game.GamePlayer.Attempts)
+		respondOk(w, []byte(fmt.Sprintf(`{"status":"you suck","remainingAttempts":%d}`, remaining)))
+		return
+	}
+
+	respondOk(w, []byte(`{"status":"a winner is you!"}`))
+	s.mutex.Lock()
+	delete(s.games, guessRequest.GameId)
+	s.mutex.Unlock()
 }
