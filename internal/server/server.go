@@ -21,13 +21,14 @@ import (
 type Server struct {
 	Router chi.Router
 	*http.Server
-	players    ApiPlayersIface
-	games      ApiGamesIface
-	dictionary types.DictionaryIface
-	intFunc    func(int) int
+	players      ApiPlayersIface
+	games        ApiGamesIface
+	dictionary   types.DictionaryIface
+	intFunc      func(int) int
+	scoreChannel chan *player.ApiPlayer
 }
 
-func New(router chi.Router, dict types.DictionaryIface) *Server {
+func New(router chi.Router, dict types.DictionaryIface, scoreChannel chan *player.ApiPlayer) *Server {
 	srv := http.Server{
 		Addr:         os.Getenv("API_HOST"),
 		Handler:      router,
@@ -40,7 +41,7 @@ func New(router chi.Router, dict types.DictionaryIface) *Server {
 	games := game.NewApiGames(&sync.RWMutex{})
 	intFunc := rand.IntN
 
-	return &Server{router, &srv, players, games, dict, intFunc}
+	return &Server{router, &srv, players, games, dict, intFunc, scoreChannel}
 }
 
 func (s *Server) applyMiddleware() {

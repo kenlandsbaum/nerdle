@@ -5,6 +5,7 @@ import (
 	"essentials/nerdle/internal/env"
 	"essentials/nerdle/internal/impl"
 	"essentials/nerdle/internal/rest"
+	"essentials/nerdle/internal/scoreboard"
 	"essentials/nerdle/internal/server"
 	"fmt"
 	"net/http"
@@ -17,6 +18,9 @@ import (
 
 func main() {
 	env.Load(".env")
+	sb := scoreboard.New()
+	go sb.ListenForPlayer()
+
 	restClient := rest.New(http.DefaultClient)
 	dict := &dictionary.Dictionary{
 		DictionaryApi:    os.Getenv("DICTIONARY_API"),
@@ -24,7 +28,7 @@ func main() {
 		RestClient:       restClient,
 		FsClient:         impl.Opener{},
 	}
-	srv := server.New(chi.NewRouter(), dict)
+	srv := server.New(chi.NewRouter(), dict, sb.ScoreChannel)
 	if err := srv.Run(); err != nil {
 		log.Fatal().Msg(fmt.Sprintf("failed to run application %s", err))
 	}

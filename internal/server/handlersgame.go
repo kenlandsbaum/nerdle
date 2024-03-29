@@ -99,7 +99,7 @@ func (s *Server) handleGuess(w http.ResponseWriter, r *http.Request) {
 		respondOk(w, []byte(fmt.Sprintf(`{"status":"you suck","remainingAttempts":%d}`, remaining)))
 		return
 	}
-
+	s.scoreChannel <- game.GamePlayer
 	respondOk(w, []byte(`{"status":"a winner is you!"}`))
 	s.games.Delete(guessRequest.GameId)
 }

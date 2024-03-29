@@ -1,12 +1,30 @@
 package scoreboard
 
-import "essentials/nerdle/internal/player"
+import (
+	"essentials/nerdle/internal/player"
 
-type ScoreboardV2 map[string]*player.ScoredPlayer
+	"github.com/rs/zerolog/log"
+)
 
-func (s ScoreboardV2) AddPlayerScore(p *player.Player) {
-	if _, ok := s[p.Name]; !ok {
-		s[p.Name] = &player.ScoredPlayer{Player: p}
+type ScoreboardV2 struct {
+	Players      map[string]*player.ScoredPlayer
+	ScoreChannel chan *player.ApiPlayer
+}
+
+func (s *ScoreboardV2) AddPlayerScore(p *player.ApiPlayer) {
+	if _, ok := s.Players[p.Name]; !ok {
+		s.Players[p.Name] = &player.ScoredPlayer{Player: p}
 	}
-	s[p.Name].Score += 1
+	s.Players[p.Name].Score += 1
+}
+
+func (s *ScoreboardV2) ListenForPlayer() {
+	for p := range s.ScoreChannel {
+		log.Info().Msgf("received player %s", p.Id)
+		s.AddPlayerScore(p)
+	}
+}
+
+func New() *ScoreboardV2 {
+	return &ScoreboardV2{Players: make(map[string]*player.ScoredPlayer, 0), ScoreChannel: make(chan *player.ApiPlayer)}
 }

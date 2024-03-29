@@ -5,6 +5,7 @@ import (
 	"essentials/nerdle/internal/dictionary"
 	"essentials/nerdle/internal/game"
 	"essentials/nerdle/internal/player"
+	"essentials/nerdle/internal/scoreboard"
 	"essentials/nerdle/internal/service/id"
 	"fmt"
 	"io"
@@ -150,6 +151,8 @@ func Test_handleStartGame(t *testing.T) {
 }
 
 func Test_handleGuess(t *testing.T) {
+	testScoreboard := scoreboard.New()
+	go testScoreboard.ListenForPlayer()
 	testPlayerId := id.GetUlid()
 	testGameId := id.GetUlid()
 	testPlayer := player.ApiPlayer{Attempts: make([]string, 0), Name: "ken", Id: testPlayerId}
@@ -157,7 +160,7 @@ func Test_handleGuess(t *testing.T) {
 	testPlayers := testApiPlayers{players: map[ulid.ULID]*player.ApiPlayer{testPlayerId: &testPlayer}}
 	testGames := testApiGames{games: map[ulid.ULID]*game.ApiGame{testGameId: &testGame}}
 
-	s := Server{games: &testGames, players: &testPlayers}
+	s := Server{games: &testGames, players: &testPlayers, scoreChannel: testScoreboard.ScoreChannel}
 	t.Run("should fail and communicate number of attempts remaining", func(t *testing.T) {
 		testPostBodyFail := []byte(fmt.Sprintf(`{"game_id":"%s","guess":"funkytst"}`, testGameId))
 		w := httptest.NewRecorder()

@@ -1,6 +1,6 @@
 package player
 
 type ScoredPlayer struct {
-	Player *Player
+	Player *ApiPlayer
 	Score  int
 }

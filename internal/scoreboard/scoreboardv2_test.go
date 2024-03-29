@@ -6,10 +6,10 @@ import (
 )
 
 func TestAddPlayerScore(t *testing.T) {
-	p1 := player.Player{Name: "ken"}
-	p2 := player.Player{Name: "sam"}
+	p1 := player.ApiPlayer{Name: "ken"}
+	p2 := player.ApiPlayer{Name: "sam"}
 
-	s := ScoreboardV2{}
+	s := ScoreboardV2{Players: make(map[string]*player.ScoredPlayer, 2)}
 
 	for i := 0; i < 10; i++ {
 		s.AddPlayerScore(&p1)
@@ -18,14 +18,14 @@ func TestAddPlayerScore(t *testing.T) {
 		s.AddPlayerScore(&p2)
 	}
 
-	actual1, ok1 := s["ken"]
+	actual1, ok1 := s.Players["ken"]
 	if !ok1 {
 		t.Errorf("expected ok true")
 	}
 	if actual1.Score != 10 {
 		t.Errorf("got %d expected 10\n", actual1.Score)
 	}
-	actual2, ok2 := s["sam"]
+	actual2, ok2 := s.Players["sam"]
 	if !ok2 {
 		t.Errorf("expected ok true")
 	}

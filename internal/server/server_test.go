@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"essentials/nerdle/internal/dictionary"
+	"essentials/nerdle/internal/player"
 	"net/http"
 	"os"
 	"testing"
@@ -23,8 +24,9 @@ func (ts testDict) GetWordApi(int) *dictionary.DefinitionResponse {
 func Test_serverRun(t *testing.T) {
 	os.Setenv("API_HOST", "localhost:8888")
 	r := chi.NewRouter()
+	ch := make(chan *player.ApiPlayer)
 
-	srv := New(r, testDict{})
+	srv := New(r, testDict{}, ch)
 
 	go func() {
 		time.Sleep(time.Second * 1)
