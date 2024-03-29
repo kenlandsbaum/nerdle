@@ -2,6 +2,7 @@ const playerUrl = "http://localhost:8888/player";
 const gameUrl = "http://localhost:8888/game";
 const startUrl = "http://localhost:8888/start";
 const guessUrl = "http://localhost:8888/guess";
+const scoreUrl = "http://localhost:8888/score";
 const fetchConfig = {headers: {"Content-Type": "application/json", "Authorization": "somevalue"}};
 
 function $(id) {
@@ -57,7 +58,8 @@ function gamePlayUI() {
     const guessLabel = createElement("label", "Guess the word:")
     const guessInput =  withEvent("change", handleGuessChange)(createElement("input", {id: "guessInput"}));
     const guessButton = withEvent("click", handleGuessSend)(createElement("button", "submit guess"));
-    return [gameButton, startButton, hints, guessLabel, guessInput, guessButton];
+    const scoreboardContainer = createElement("div", {id: "scoreboard"});
+    return [gameButton, startButton, hints, guessLabel, guessInput, guessButton, scoreboardContainer];
 }
 
 function app() {
@@ -100,17 +102,26 @@ async function handleGuessSend() {
         if (res.status.includes("winner")) {
             $("hints").innerHTML = "<h2>Hints from server</h2>";
             $("guessInput").value = "";
+            await getScores();
         }
         console.log(res);
     } catch (e) {
         console.error(e);
     }
-    
+}
+
+async function getScores() {
+    try {
+        const getConfig = {...fetchConfig, method: "GET"};
+        const res = await fetch(scoreUrl, getConfig).then(r => r.json());
+        $("scoreboard").innerHTML = `<h2>Scoreboard:</h2><pre>${JSON.stringify(res, null, 2)}</pre>`
+    } catch (e) {
+        console.error(e);
+    }
 }
 
 async function getPlayers() {
     const res = await fetch(playerUrl, fetchConfig).then(r => r.json());
-
     console.log(res);
 }
 
@@ -120,7 +131,7 @@ async function createPlayer() {
         const playerRequest = {name: nameValue};
         const postConfig = {...fetchConfig, body: JSON.stringify(playerRequest), method: "POST"};
         const res = await fetch(playerUrl, postConfig).then(r => r.json());
-    
+        console.log("player created:", res);
         state.players[res.player_id] = nameValue;
         console.log(state);
     } catch (e) {
