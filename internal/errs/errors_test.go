@@ -10,7 +10,6 @@ var (
 )
 
 func TestPanicIfErr(t *testing.T) {
-
 	defer func() {
 		err := recover()
 		if err == nil {
