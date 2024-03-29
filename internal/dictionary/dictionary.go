@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
+	"essentials/nerdle/internal/errs"
 	"essentials/nerdle/internal/rest"
 	"fmt"
 	"io"
@@ -65,7 +66,7 @@ func (d Dictionary) scanSource(reader io.Reader, randomInt int) (*DictionaryWord
 		log.Printf("Error reading from dictionary file: %s", err)
 		return nil, err
 	}
-	return nil, errors.New("word not found")
+	return nil, &errs.NotFoundError{}
 }
 
 func (d Dictionary) getDefinition(word *DictionaryWord) (*DefinitionResponse, error) {
