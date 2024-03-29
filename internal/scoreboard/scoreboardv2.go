@@ -12,6 +12,7 @@ type ScoreboardV2 struct {
 }
 
 func (s *ScoreboardV2) AddPlayerScore(p *player.ApiPlayer) {
+	log.Info().Msgf("player score updating fopr %s", p.Name)
 	if _, ok := s.Players[p.Name]; !ok {
 		s.Players[p.Name] = &player.ScoredPlayer{Player: p}
 	}

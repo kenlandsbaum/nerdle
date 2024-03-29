@@ -26,9 +26,14 @@ type Server struct {
 	dictionary   types.DictionaryIface
 	intFunc      func(int) int
 	scoreChannel chan *player.ApiPlayer
+	scoreHandler http.Handler
 }
 
-func New(router chi.Router, dict types.DictionaryIface, scoreChannel chan *player.ApiPlayer) *Server {
+func New(
+	router chi.Router,
+	dict types.DictionaryIface,
+	scoreChannel chan *player.ApiPlayer,
+	scoreHandler http.Handler) *Server {
 	srv := http.Server{
 		Addr:         os.Getenv("API_HOST"),
 		Handler:      router,
@@ -41,7 +46,7 @@ func New(router chi.Router, dict types.DictionaryIface, scoreChannel chan *playe
 	games := game.NewApiGames(&sync.RWMutex{})
 	intFunc := rand.IntN
 
-	return &Server{router, &srv, players, games, dict, intFunc, scoreChannel}
+	return &Server{router, &srv, players, games, dict, intFunc, scoreChannel, scoreHandler}
 }
 
 func (s *Server) applyMiddleware() {
@@ -60,6 +65,7 @@ func (s *Server) routes() {
 	s.Router.Post("/game", useJsonContent(s.handlePostGame))
 	s.Router.Post("/start", useJsonContent(handleError(s.handleStartGame)))
 	s.Router.Post("/guess", useJsonContent(s.handleGuess))
+	s.Router.Mount("/score", s.scoreHandler)
 }
 
 func (s *Server) ui() {

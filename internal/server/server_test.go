@@ -25,8 +25,9 @@ func Test_serverRun(t *testing.T) {
 	os.Setenv("API_HOST", "localhost:8888")
 	r := chi.NewRouter()
 	ch := make(chan *player.ApiPlayer)
+	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
 
-	srv := New(r, testDict{}, ch)
+	srv := New(r, testDict{}, ch, testHandler)
 
 	go func() {
 		time.Sleep(time.Second * 1)
