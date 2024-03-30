@@ -19,6 +19,24 @@ type Limiter[T any] struct {
 	waitGroup    *sync.WaitGroup
 }
 
+/*
+Limiter takes a `limit`, a `numberOfJobs` and a worker func that gathers data.
+
+The `limit` determines the max number of goroutines to be spawned.
+
+The `numberOfJobs` determines how many times the worker func will be invoked.
+
+The Spawn.Run() chained method will return a data channel of the return type of the worker func.
+
+Usage:
+
+	limiter := New(maxGoroutines, numberOfJobs, myWorkerFunc)
+	results := limiter.Spawn().Run()
+
+	for result := range results {
+		doTheNeedful(result)
+	}
+*/
 func New[T any](limit, numberOfJobs int, fn Gatherer[T]) *Limiter[T] {
 	return &Limiter[T]{
 		dataChannel:  make(chan T, numberOfJobs),

@@ -10,7 +10,7 @@ import (
 )
 
 func testStringGatherer(i int) string {
-	time.Sleep(time.Duration(time.Second * 1))
+	time.Sleep(time.Duration(time.Millisecond * 100))
 	return fmt.Sprintf("result-%d", i)
 }
 
