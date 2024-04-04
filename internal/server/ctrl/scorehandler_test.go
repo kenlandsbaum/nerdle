@@ -23,7 +23,7 @@ func TestScoreHandler(t *testing.T) {
 		testScoreboard.AddPlayerScore(&testPlayer)
 	}
 
-	scoreHandler := New(testScoreboard)
+	scoreHandler := NewScoreHandler(testScoreboard)
 	scoreHandler.ServeHTTP(w, r)
 
 	result := w.Result()

@@ -54,7 +54,7 @@ func (s *Server) applyMiddleware() {
 	s.Router.Use(middleware.RealIP)
 	s.Router.Use(middleware.Logger)
 	s.Router.Use(middleware.Recoverer)
-	s.Router.Use(authenticate)
+	// s.Router.Use(authenticate)
 	s.Router.Use(middleware.Timeout(3 * time.Second))
 }
 

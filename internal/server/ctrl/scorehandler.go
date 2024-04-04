@@ -29,6 +29,6 @@ func (s *ScoreHandler) handleGetScores(w http.ResponseWriter, _ *http.Request) {
 	w.Write(bts)
 }
 
-func New(sb *scoreboard.ScoreboardV2) *ScoreHandler {
+func NewScoreHandler(sb *scoreboard.ScoreboardV2) *ScoreHandler {
 	return &ScoreHandler{ScoreBoard: sb}
 }

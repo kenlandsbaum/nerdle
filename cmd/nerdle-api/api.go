@@ -3,12 +3,14 @@ package main
 import (
 	"essentials/nerdle/internal/dictionary"
 	"essentials/nerdle/internal/env"
+	"essentials/nerdle/internal/images"
 	"essentials/nerdle/internal/impl"
 	"essentials/nerdle/internal/rest"
 	"essentials/nerdle/internal/scoreboard"
 	"essentials/nerdle/internal/server"
 	"essentials/nerdle/internal/server/ctrl"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 
@@ -17,10 +19,30 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+func TestNetwork() {
+	res, err := http.Get("https://randomuser.me/api")
+	if err != nil {
+		panic(err)
+	}
+	defer res.Body.Close()
+	bts, err := io.ReadAll(res.Body)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("got response?", string(bts))
+}
+
 func main() {
 	env.Load(".env")
+	images.ProcessThumbnails(os.Getenv("IMAGES_FOLDER"))
+	// TestNetwork()
+	// App()
+}
+
+func App() {
+	env.Load(".env")
 	sb := scoreboard.New()
-	scoreHandler := ctrl.New(sb)
+	scoreHandler := ctrl.NewScoreHandler(sb)
 	go sb.ListenForPlayer()
 
 	restClient := rest.New(http.DefaultClient)
