@@ -68,14 +68,21 @@ func convert(grid [][]color.Color) *image.NRGBA {
 	return newImage
 }
 
-func makeImageGrid(fileName string) [][]color.Color {
-	file, _ := os.Open(fileName)
+func readImage(fileName string) image.Image {
+	file, err := os.Open(fileName)
+	if err != nil {
+		panic(err)
+	}
 	defer file.Close()
 	im, err := jpeg.Decode(file)
 	if err != nil {
-		fmt.Println("bad image:", fileName)
 		panic(err)
 	}
+	return im
+}
+
+func makeImageGrid(fileName string) [][]color.Color {
+	im := readImage(fileName)
 	size := im.Bounds().Size()
 	var grid [][]color.Color
 
