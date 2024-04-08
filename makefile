@@ -11,3 +11,6 @@ race:
 
 covhtml:
 	go tool cover -html=cover.out
+
+proto:
+	protoc --go_out=. *.proto

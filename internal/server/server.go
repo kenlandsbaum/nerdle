@@ -4,6 +4,7 @@ import (
 	"essentials/nerdle/internal/fileserver"
 	"essentials/nerdle/internal/game"
 	"essentials/nerdle/internal/player"
+	"essentials/nerdle/internal/pro"
 	"essentials/nerdle/internal/types"
 	"fmt"
 	"math/rand/v2"
@@ -16,6 +17,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/protobuf/proto"
 )
 
 type Server struct {
@@ -58,6 +60,20 @@ func (s *Server) applyMiddleware() {
 	s.Router.Use(middleware.Timeout(3 * time.Second))
 }
 
+func (s *Server) handlePersonTest(w http.ResponseWriter, _ *http.Request) {
+	address := pro.Address{Street: "123 elm st", State: "TX"}
+	person := &pro.Person{FirstName: "jen", LastName: "lee", Email: "jen@mail.com", Address: &address}
+	bts, err := proto.Marshal(person)
+
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte("protobuf stuff fell on its face"))
+		return
+	}
+	w.WriteHeader(200)
+	w.Write(bts)
+}
+
 func (s *Server) routes() {
 	s.Router.Get("/", useTextContent(s.handleHome))
 	s.Router.Get("/player", useJsonContent(s.handleGetPlayers))
@@ -66,6 +82,7 @@ func (s *Server) routes() {
 	s.Router.Post("/start", useJsonContent(handleError(s.handleStartGame)))
 	s.Router.Post("/guess", useJsonContent(s.handleGuess))
 	s.Router.Mount("/score", s.scoreHandler)
+	s.Router.Get("/pro", s.handlePersonTest)
 }
 
 func (s *Server) ui() {
